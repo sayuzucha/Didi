@@ -1,31 +1,18 @@
 package com.example.didi.features.home.data.datasources.remote.models
 
-
 import com.google.gson.annotations.SerializedName
 
-data class EstimateRequestDto(
+data class CreateRideRequestDto(
 
-    @SerializedName("origin_lat")
-    val originLat: Double,
+    @SerializedName("user_id")
+    val userId: Int,
 
-    @SerializedName("origin_lng")
-    val originLng: Double,
+    @SerializedName("status")
+    val status: String,
 
-    @SerializedName("dest_lat")
-    val destLat: Double,
+    @SerializedName("total_paid")
+    val totalPaid: Double,
 
-    @SerializedName("dest_lng")
-    val destLng: Double
-)
-
-data class EstimateResponseDto(
-
-    @SerializedName("estimated_price")
-    val estimatedPrice: Double,
-
-    @SerializedName("currency")
-    val currency: String,
-
-    @SerializedName("estimated_duration_minutes")
-    val estimatedDurationMinutes: Int
+    @SerializedName("date")
+    val date: String? = null
 )

@@ -1,6 +1,5 @@
 package com.example.didi.features.home.data.datasources.remote.api
 
-package com.example.didi.features.home.data.datasources.remote.api
 
 import com.example.didi.features.home.data.datasources.remote.models.*
 import retrofit2.http.*
