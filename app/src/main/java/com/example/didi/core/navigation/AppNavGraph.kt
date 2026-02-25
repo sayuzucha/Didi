@@ -16,7 +16,7 @@ fun AppNavGraph() {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.HOME
+        startDestination = Routes.LOGIN
     ) {
 
         composable(Routes.HOME) {
@@ -26,14 +26,14 @@ fun AppNavGraph() {
                 }
             )
         }
-        // Pantalla de Login
+
         composable(Routes.LOGIN) {
             LoginScreen(
                 onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
             )
         }
 
-        // Pantalla de Register
+
         composable(Routes.REGISTER) {
             RegisterScreen()
         }
