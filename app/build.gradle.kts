@@ -91,6 +91,7 @@
         implementation(libs.androidx.compose.material.icons.extended)   // Icons extendend
         implementation(libs.hilt.android)
         implementation(libs.hilt.navigation.compose)
+        implementation(libs.androidx.material3)
         ksp(libs.hilt.compiler)
 
         testImplementation(libs.junit)

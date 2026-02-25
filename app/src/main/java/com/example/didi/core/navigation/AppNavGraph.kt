@@ -7,6 +7,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.didi.features.home.presentation.screens.HomeUserScreen
+import com.example.didi.features.login.presentation.screens.LoginScreen
+import com.example.didi.features.login.presentation.screens.RegisterScreen
 
 @Composable
 fun AppNavGraph() {
@@ -23,6 +25,17 @@ fun AppNavGraph() {
                     navController.navigate(Routes.rideInProgress(rideId))
                 }
             )
+        }
+        // Pantalla de Login
+        composable(Routes.LOGIN) {
+            LoginScreen(
+                onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
+            )
+        }
+
+        // Pantalla de Register
+        composable(Routes.REGISTER) {
+            RegisterScreen()
         }
 
         composable(
