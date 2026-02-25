@@ -1,11 +1,11 @@
 package com.example.didi.features.home.presentation.screens
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +14,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.didi.features.home.presentation.components.OsmRidePickerMap
 import com.example.didi.features.home.presentation.viewmodels.HomeViewModel
+import org.osmdroid.util.GeoPoint
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,8 +35,16 @@ fun HomeUserScreen(
         }
     }
 
-    // Modal de estimación
     var showEstimateSheet by remember { mutableStateOf(false) }
+    var pickingOrigin by remember { mutableStateOf(true) } // true = origen, false = destino
+
+    val originGeo = uiState.origin?.let { GeoPoint(it.lat, it.lng) }
+    val destGeo = uiState.destination?.let { GeoPoint(it.lat, it.lng) }
+
+    // Si ya eligió origen, automáticamente cambia a destino
+    LaunchedEffect(originGeo) {
+        if (originGeo != null && destGeo == null) pickingOrigin = false
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -49,7 +59,6 @@ fun HomeUserScreen(
             )
         }
     ) { innerPadding ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,45 +85,94 @@ fun HomeUserScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
 
-                        // Placeholder del mapa (por ahora)
+                        // Header arriba del mapa
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = if (pickingOrigin) "Selecciona ORIGEN" else "Selecciona DESTINO",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        text = "Toca el mapa para colocar el punto",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        // si no tienes clear en el VM, puedes setear null en tu estado o crear funciones:
+                                        // viewModel.clearOriginDestination()
+                                        // workaround rápido: vuelve a crear un método en el VM.
+                                        // Aquí asumo que sí tienes o lo crearás.
+                                        viewModel.clearSelection()
+                                        pickingOrigin = true
+                                    }
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "Limpiar")
+                                }
+                            }
+                        }
+
+                        // Mapa real
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(240.dp),
+                                .height(280.dp),
                             shape = MaterialTheme.shapes.large
                         ) {
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Mapa aquí (elige origen y destino)")
-                            }
+                            OsmRidePickerMap(
+                                modifier = Modifier.fillMaxSize(),
+                                origin = originGeo,
+                                destination = destGeo,
+                                pickingOrigin = pickingOrigin,
+                                onPick = { geo ->
+                                    if (pickingOrigin) {
+                                        viewModel.setOrigin(geo.latitude, geo.longitude)
+                                        pickingOrigin = false
+                                    } else {
+                                        viewModel.setDestination(geo.latitude, geo.longitude)
+                                    }
+                                }
+                            )
                         }
 
-                        // Acciones rápidas para simular selección (mientras implementas mapa real)
+                        // Controles de modo
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            OutlinedButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = { viewModel.setOrigin(-34.6037, -58.3816) }
-                            ) {
-                                Icon(Icons.Default.MyLocation, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Origen")
-                            }
-
-                            OutlinedButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = { viewModel.setDestination(-34.6158, -58.4333) }
-                            ) {
-                                Icon(Icons.Default.Route, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Destino")
-                            }
+                            AssistChip(
+                                onClick = { pickingOrigin = true },
+                                label = { Text("Elegir Origen") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.MyLocation, contentDescription = null)
+                                }
+                            )
+                            AssistChip(
+                                onClick = { pickingOrigin = false },
+                                label = { Text("Elegir Destino") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Route, contentDescription = null)
+                                }
+                            )
                         }
 
-                        // Mostrar coordenadas elegidas
+                        // Coordenadas elegidas (más limpio)
                         Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Column(
+                                Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 Text("Origen: ${uiState.origin?.lat ?: "-"}, ${uiState.origin?.lng ?: "-"}")
                                 Text("Destino: ${uiState.destination?.lat ?: "-"}, ${uiState.destination?.lng ?: "-"}")
                             }
@@ -147,9 +205,7 @@ fun HomeUserScreen(
 
     // BottomSheet de estimación
     if (showEstimateSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showEstimateSheet = false }
-        ) {
+        ModalBottomSheet(onDismissRequest = { showEstimateSheet = false }) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -170,8 +226,6 @@ fun HomeUserScreen(
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !uiState.isCreatingRide,
                         onClick = {
-                            // aquí usa el userId de tu sesión (login falso). Por ahora te dejo un placeholder.
-                            // Cambia 1 por session.userId cuando lo tengas.
                             viewModel.confirmRide(userId = 1)
                             showEstimateSheet = false
                         }

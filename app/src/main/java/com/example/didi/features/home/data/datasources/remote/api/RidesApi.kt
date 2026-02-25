@@ -6,43 +6,18 @@ import retrofit2.http.*
 
 interface RidesApi {
 
-    /* ===========================
-       1️⃣ ESTIMATE
-       POST /api/v1/rides/estimate
-       =========================== */
-    @POST("/api/v1/rides/estimate")
-    suspend fun estimateRide(
-        @Body body: EstimateRequestDto
-    ): EstimateResponseDto
+    @POST("rides/estimate")
+    suspend fun estimateRide(@Body body: EstimateRequestDto): EstimateResponseDto
 
+    @POST("rides/rides")
+    suspend fun createRide(@Body body: CreateRideRequestDto): RideResponseDto
 
-    /* ===========================
-       2️⃣ CREATE RIDE
-       POST /api/v1/rides/rides
-       =========================== */
-    @POST("/api/v1/rides/rides")
-    suspend fun createRide(
-        @Body body: CreateRideRequestDto
-    ): RideResponseDto
-
-
-    /* ===========================
-       3️⃣ UPDATE RIDE
-       PUT /api/v1/rides/rides/{ride_id}
-       =========================== */
-    @PUT("/api/v1/rides/rides/{ride_id}")
+    @PUT("rides/rides/{ride_id}")
     suspend fun updateRide(
         @Path("ride_id") rideId: String,
         @Body body: UpdateRideRequestDto
     ): RideResponseDto
 
-
-    /* ===========================
-       4️⃣ HISTORY
-       GET /api/v1/rides/history/{user_id}
-       =========================== */
-    @GET("/api/v1/rides/history/{user_id}")
-    suspend fun getHistory(
-        @Path("user_id") userId: Int
-    ): List<RideHistoryItemDto>
+    @GET("rides/history/{user_id}")
+    suspend fun getHistory(@Path("user_id") userId: Int): List<RideHistoryItemDto>
 }

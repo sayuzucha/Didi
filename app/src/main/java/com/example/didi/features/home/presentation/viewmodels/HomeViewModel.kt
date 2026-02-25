@@ -88,4 +88,7 @@ class HomeViewModel @Inject constructor(
     fun clearRideCreated() {
         _uiState.update { it.copy(createdRideId = null) }
     }
+    fun clearSelection() {
+        _uiState.update { it.copy(origin = null, destination = null, estimate = null) }
+    }
 }
