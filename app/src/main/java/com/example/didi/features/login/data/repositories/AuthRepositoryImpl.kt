@@ -44,6 +44,7 @@ class AuthRepositoryImpl @Inject constructor(
                 )
             )
 
+
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 Log.d("AuthRepository", "Registro exitoso para: ${body.user.fullName}")
