@@ -12,15 +12,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.didi.features.login.presentation.viewmodels.LoginViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.navigation.NavController
+import com.example.didi.core.navigation.Routes
+import com.example.didi.features.login.presentation.viewmodels.LoginViewModel
 
 @Composable
-fun LoginScreen(viewModel: LoginViewModel = hiltViewModel(), onNavigateToRegister: () -> Unit) {
+fun LoginScreen(
+    navController: NavController, // Recibimos el NavController
+    onNavigateToRegister: () -> Unit, // Callback para ir al registro
+    viewModel: LoginViewModel = hiltViewModel()
+) {
     val state = viewModel.uiState.collectAsState().value
 
     Box(
@@ -52,7 +58,6 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel(), onNavigateToRegiste
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                // CORRECCIÓN MATERIAL 3:
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -70,7 +75,6 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel(), onNavigateToRegiste
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 32.dp),
-                // CORRECCIÓN MATERIAL 3:
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -80,8 +84,11 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel(), onNavigateToRegiste
                 visualTransformation = PasswordVisualTransformation()
             )
 
+            // Botón de Iniciar sesión
             Button(
-                onClick = { viewModel.login(state.email, state.password) },
+                onClick = {
+                    viewModel.login(state.email, state.password) // Llamar al login
+                },
                 enabled = !state.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,15 +103,25 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel(), onNavigateToRegiste
                 }
             }
 
+            // Si hay error, lo mostramos
             state.error?.let {
                 Text(it, color = Color.Red, modifier = Modifier.padding(top = 16.dp))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Botón para navegar a la pantalla de registro
             TextButton(onClick = { onNavigateToRegister() }) {
                 Text("¿No tienes cuenta? Regístrate aquí.", color = Color(0xFF1E88E5))
             }
+        }
+    }
+
+    // Si el login es exitoso, navegar a HOME
+    if (state.success) {
+        navController.navigate(Routes.HOME) {
+            popUpTo(Routes.LOGIN) { inclusive = true } // Elimina la pantalla de login del stack
+            launchSingleTop = true
         }
     }
 }

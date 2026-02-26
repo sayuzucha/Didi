@@ -36,6 +36,10 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signUp(fullName: String, email: String, password: String): AuthResult {
         return try {
+            Log.d("AuthRepository", "SIGNUP fullName='${fullName}' len=${fullName.length}")
+            Log.d("AuthRepository", "SIGNUP email='${email}' len=${email.length}")
+            Log.d("AuthRepository", "SIGNUP password.length=${password.length}")
+            Log.d("AuthRepository", "SIGNUP password.preview='${password.take(30)}'")
             val response = api.signUp(
                 SignupRequestDto(
                     fullName = fullName,
@@ -43,6 +47,7 @@ class AuthRepositoryImpl @Inject constructor(
                     password = password
                 )
             )
+
 
             val body = response.body()
             if (response.isSuccessful && body != null) {

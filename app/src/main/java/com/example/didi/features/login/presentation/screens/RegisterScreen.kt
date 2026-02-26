@@ -18,10 +18,23 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.NavController
+import com.example.didi.core.navigation.Routes
 
 @Composable
-fun RegisterScreen(viewModel: RegisterViewModel = hiltViewModel()) {
-    val state = viewModel.uiState.collectAsState().value // Usamos collectAsState() para obtener el valor del estado
+fun RegisterScreen(
+    navController: NavController, // NavController para la navegación
+    viewModel: RegisterViewModel = hiltViewModel()
+) {
+    val state = viewModel.uiState.collectAsState().value
+
+    // Si el registro es exitoso, navegamos a la pantalla de Login
+    if (state.success) {
+        navController.navigate(Routes.LOGIN) {
+            popUpTo(Routes.REGISTER) { inclusive = true } // Elimina Register de la pila
+            launchSingleTop = true
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -98,7 +111,7 @@ fun RegisterScreen(viewModel: RegisterViewModel = hiltViewModel()) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Texto para navegación a Login
-            TextButton(onClick = { /* Navegar a Login */ }) {
+            TextButton(onClick = { navController.navigate(Routes.LOGIN) }) {
                 Text("¿Ya tienes cuenta? Inicia sesión aquí", color = Color(0xFF1E88E5))
             }
         }
