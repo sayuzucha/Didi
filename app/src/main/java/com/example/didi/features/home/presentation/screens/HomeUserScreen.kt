@@ -21,25 +21,25 @@ import org.osmdroid.util.GeoPoint
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeUserScreen(
-    onGoToRideInProgress: (rideId: String) -> Unit,
+    onGoToRideInProgress: (rideId: String, origin: GeoPoint, destination: GeoPoint) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    // Navegar cuando ya se creó el ride
-    LaunchedEffect(uiState.createdRideId) {
-        val rideId = uiState.createdRideId
-        if (!rideId.isNullOrBlank()) {
-            onGoToRideInProgress(rideId)
-            viewModel.clearRideCreated()
-        }
-    }
 
     var showEstimateSheet by remember { mutableStateOf(false) }
     var pickingOrigin by remember { mutableStateOf(true) } // true = origen, false = destino
 
     val originGeo = uiState.origin?.let { GeoPoint(it.lat, it.lng) }
     val destGeo = uiState.destination?.let { GeoPoint(it.lat, it.lng) }
+
+    // Navegar cuando ya se creó el ride (y ya tengo origin/dest)
+    LaunchedEffect(uiState.createdRideId, originGeo, destGeo) {
+        val rideId = uiState.createdRideId
+        if (!rideId.isNullOrBlank() && originGeo != null && destGeo != null) {
+            onGoToRideInProgress(rideId, originGeo, destGeo)
+            viewModel.clearRideCreated()
+        }
+    }
 
     // Si ya eligió origen, automáticamente cambia a destino
     LaunchedEffect(originGeo) {
@@ -110,10 +110,6 @@ fun HomeUserScreen(
 
                                 IconButton(
                                     onClick = {
-                                        // si no tienes clear en el VM, puedes setear null en tu estado o crear funciones:
-                                        // viewModel.clearOriginDestination()
-                                        // workaround rápido: vuelve a crear un método en el VM.
-                                        // Aquí asumo que sí tienes o lo crearás.
                                         viewModel.clearSelection()
                                         pickingOrigin = true
                                     }
@@ -154,20 +150,16 @@ fun HomeUserScreen(
                             AssistChip(
                                 onClick = { pickingOrigin = true },
                                 label = { Text("Elegir Origen") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.MyLocation, contentDescription = null)
-                                }
+                                leadingIcon = { Icon(Icons.Default.MyLocation, contentDescription = null) }
                             )
                             AssistChip(
                                 onClick = { pickingOrigin = false },
                                 label = { Text("Elegir Destino") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Route, contentDescription = null)
-                                }
+                                leadingIcon = { Icon(Icons.Default.Route, contentDescription = null) }
                             )
                         }
 
-                        // Coordenadas elegidas (más limpio)
+                        // Coordenadas elegidas
                         Card(modifier = Modifier.fillMaxWidth()) {
                             Column(
                                 Modifier.padding(12.dp),
