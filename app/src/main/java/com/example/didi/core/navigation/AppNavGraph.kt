@@ -29,13 +29,13 @@ fun AppNavGraph() {
 
         composable(Routes.LOGIN) {
             LoginScreen(
+                navController = navController,  // Pasa navController aquí
                 onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
             )
         }
 
-
         composable(Routes.REGISTER) {
-            RegisterScreen()
+            RegisterScreen(navController = navController) // Pasa navController aquí
         }
 
         composable(
