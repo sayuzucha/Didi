@@ -24,21 +24,19 @@ fun OsmRidePickerMap(
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
-            // Recomendado por osmdroid
             Configuration.getInstance().userAgentValue = ctx.packageName
 
             MapView(ctx).apply {
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
 
-                controller.setZoom(14.0)
-                controller.setCenter(origin ?: GeoPoint(19.4326, -99.1332)) // CDMX default
+                controller.setZoom(18.0)
+                controller.setCenter(origin ?: GeoPoint(19.4326, -99.1332))
 
                 val rotation = RotationGestureOverlay(this)
                 rotation.isEnabled = true
                 overlays.add(rotation)
 
-                // Captura taps en el mapa
                 overlays.add(object : Overlay() {
                     override fun onSingleTapConfirmed(e: MotionEvent?, mapView: MapView?): Boolean {
                         if (e == null || mapView == null) return false
@@ -50,7 +48,6 @@ fun OsmRidePickerMap(
             }
         },
         update = { map ->
-            // Quita markers previos
             map.overlays.removeAll { it is Marker }
 
             origin?.let {
@@ -71,7 +68,6 @@ fun OsmRidePickerMap(
                 }
             }
 
-            // Centra cámara al último punto relevante
             val center = if (pickingOrigin) origin else destination
             center?.let { map.controller.animateTo(it) }
 

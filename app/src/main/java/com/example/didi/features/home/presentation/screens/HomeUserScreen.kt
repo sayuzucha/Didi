@@ -145,7 +145,7 @@ fun HomeUserScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(300.dp),
+                            .weight(1f), // Se cambió de height(300.dp) a weight(1f) para que sea más alto
                         shape = RoundedCornerShape(22.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
@@ -219,6 +219,7 @@ fun HomeUserScreen(
                         }
                     }
 
+                    // Botón degradado (Calcular tarifa)
                     Button(
                         onClick = {
                             viewModel.estimateRide()
@@ -274,6 +275,7 @@ fun HomeUserScreen(
             }
         }
 
+        // BottomSheet de estimación
         if (showEstimateSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showEstimateSheet = false },
