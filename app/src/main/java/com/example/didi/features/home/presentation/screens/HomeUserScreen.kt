@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Route
@@ -28,6 +29,7 @@ import org.osmdroid.util.GeoPoint
 @Composable
 fun HomeUserScreen(
     onGoToRideInProgress: (rideId: String, origin: GeoPoint, destination: GeoPoint) -> Unit,
+    onGoToHistory: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -69,7 +71,7 @@ fun HomeUserScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "HOME",
+                            text = "Didi Clone",
                             color = Color.White,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 0.6.sp
@@ -81,8 +83,8 @@ fun HomeUserScreen(
                         actionIconContentColor = Color.White
                     ),
                     actions = {
-                        IconButton(onClick = { viewModel.estimateRide() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Re-estimar")
+                        IconButton(onClick = onGoToHistory) {
+                            Icon(Icons.Default.History, contentDescription = "Historial", tint = Color.White)
                         }
                     }
                 )
@@ -94,199 +96,184 @@ fun HomeUserScreen(
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
-                when {
-                    uiState.isLoading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Color.White
-                        )
+                
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = if (pickingOrigin) "Selecciona ORIGEN" else "Selecciona DESTINO",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF1B1B1B)
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    text = "Toca el mapa para colocar el punto",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF6F6F6F)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    viewModel.clearSelection()
+                                    pickingOrigin = true
+                                }
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = "Limpiar", tint = primary)
+                            }
+                        }
                     }
 
-                    uiState.error != null -> {
-                        Card(
-                            modifier = Modifier.align(Alignment.Center),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                    ) {
+                        Box(Modifier.fillMaxSize()) {
+                            OsmRidePickerMap(
+                                modifier = Modifier.fillMaxSize(),
+                                origin = originGeo,
+                                destination = destGeo,
+                                pickingOrigin = pickingOrigin,
+                                onPick = { geo ->
+                                    if (pickingOrigin) {
+                                        viewModel.setOrigin(geo.latitude, geo.longitude)
+                                        pickingOrigin = false
+                                    } else {
+                                        viewModel.setDestination(geo.latitude, geo.longitude)
+                                    }
+                                }
+                            )
+
+
+                            Row(
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = 12.dp)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(Color.White.copy(alpha = 0.92f))
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                FilterChip(
+                                    selected = pickingOrigin,
+                                    onClick = { pickingOrigin = true },
+                                    label = { Text("Origen") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.MyLocation, contentDescription = null)
+                                    }
+                                )
+                                FilterChip(
+                                    selected = !pickingOrigin,
+                                    onClick = { pickingOrigin = false },
+                                    label = { Text("Destino") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Route, contentDescription = null)
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Coordenadas
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = uiState.error ?: "Error",
-                                color = Color.Red,
-                                modifier = Modifier.padding(16.dp)
+                                "Origen: ${uiState.origin?.lat ?: "-"}, ${uiState.origin?.lng ?: "-"}",
+                                color = Color(0xFF2A2A2A)
+                            )
+                            Text(
+                                "Destino: ${uiState.destination?.lat ?: "-"}, ${uiState.destination?.lng ?: "-"}",
+                                color = Color(0xFF2A2A2A)
                             )
                         }
                     }
 
-                    else -> {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                    Button(
+                        onClick = {
+                            viewModel.estimateRide()
+                            showEstimateSheet = true
+                        },
+                        enabled = uiState.origin != null && uiState.destination != null && !uiState.isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Brush.horizontalGradient(listOf(primary, secondary))),
+                            contentAlignment = Alignment.Center
                         ) {
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(20.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(14.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = if (pickingOrigin) "Selecciona ORIGEN" else "Selecciona DESTINO",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp,
-                                            color = Color(0xFF1B1B1B)
-                                        )
-                                        Spacer(Modifier.height(2.dp))
-                                        Text(
-                                            text = "Toca el mapa para colocar el punto",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color(0xFF6F6F6F)
-                                        )
-                                    }
-
-                                    IconButton(
-                                        onClick = {
-                                            viewModel.clearSelection()
-                                            pickingOrigin = true
-                                        }
-                                    ) {
-                                        Icon(Icons.Default.Close, contentDescription = "Limpiar", tint = primary)
-                                    }
-                                }
+                            if (uiState.isLoading) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                            } else {
+                                Text(
+                                    text = "Calcular tarifa",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
                             }
+                        }
+                    }
 
+                    if (uiState.error != null) {
+                        Text(
+                            text = uiState.error ?: "Error",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
 
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(300.dp),
-                                shape = RoundedCornerShape(22.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-                            ) {
-                                Box(Modifier.fillMaxSize()) {
-                                    OsmRidePickerMap(
-                                        modifier = Modifier.fillMaxSize(),
-                                        origin = originGeo,
-                                        destination = destGeo,
-                                        pickingOrigin = pickingOrigin,
-                                        onPick = { geo ->
-                                            if (pickingOrigin) {
-                                                viewModel.setOrigin(geo.latitude, geo.longitude)
-                                                pickingOrigin = false
-                                            } else {
-                                                viewModel.setDestination(geo.latitude, geo.longitude)
-                                            }
-                                        }
-                                    )
-
-
-                                    Row(
-                                        modifier = Modifier
-                                            .align(Alignment.TopCenter)
-                                            .padding(top = 12.dp)
-                                            .clip(RoundedCornerShape(18.dp))
-                                            .background(Color.White.copy(alpha = 0.92f))
-                                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        FilterChip(
-                                            selected = pickingOrigin,
-                                            onClick = { pickingOrigin = true },
-                                            label = { Text("Origen") },
-                                            leadingIcon = {
-                                                Icon(Icons.Default.MyLocation, contentDescription = null)
-                                            }
-                                        )
-                                        FilterChip(
-                                            selected = !pickingOrigin,
-                                            onClick = { pickingOrigin = false },
-                                            label = { Text("Destino") },
-                                            leadingIcon = {
-                                                Icon(Icons.Default.Route, contentDescription = null)
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Coordenadas
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(20.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(14.dp),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text(
-                                        "Origen: ${uiState.origin?.lat ?: "-"}, ${uiState.origin?.lng ?: "-"}",
-                                        color = Color(0xFF2A2A2A)
-                                    )
-                                    Text(
-                                        "Destino: ${uiState.destination?.lat ?: "-"}, ${uiState.destination?.lng ?: "-"}",
-                                        color = Color(0xFF2A2A2A)
-                                    )
-                                }
-                            }
-
-                            // Botón degradado (Calcular tarifa)
-                            Button(
-                                onClick = {
-                                    viewModel.estimateRide()
-                                    showEstimateSheet = true
-                                },
-                                enabled = uiState.origin != null && uiState.destination != null && !uiState.isLoading,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(54.dp),
-                                shape = RoundedCornerShape(18.dp),
-                                contentPadding = PaddingValues(0.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(RoundedCornerShape(18.dp))
-                                        .background(Brush.horizontalGradient(listOf(primary, secondary))),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "Calcular tarifa",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                }
-                            }
-
-                            if (uiState.isCreatingRide) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    CircularProgressIndicator(color = Color.White)
-                                }
-                            }
+                    if (uiState.isCreatingRide) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator(color = Color.White)
                         }
                     }
                 }
             }
-
         }
 
-        // BottomSheet de estimación (estilo más clean)
         if (showEstimateSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showEstimateSheet = false },
@@ -302,10 +289,10 @@ fun HomeUserScreen(
                     Text("Estimación", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
                     val estimate = uiState.estimate
-                    if (estimate == null) {
+                    if (uiState.isLoading && estimate == null) {
                         Text("Calculando estimación...")
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    } else {
+                    } else if (estimate != null) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),

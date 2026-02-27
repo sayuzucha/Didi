@@ -4,6 +4,7 @@ object Routes {
     const val HOME = "home"
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val HISTORY = "history"
     const val ARG_RIDE_ID = "rideId"
     const val RIDE_IN_PROGRESS = "ride_in_progress/{$ARG_RIDE_ID}"
 
